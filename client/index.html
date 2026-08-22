@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>AR Graphs</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="camera-container">
+    <!-- Camera Video Feed -->
+    <video id="webcam" autoplay playsinline muted></video>
+
+    <!-- Header Overlay -->
+    <header class="top-bar">
+      <h1>AR Graphs</h1>
+    </header>
+
+    <!-- Shutter Button Overlay -->
+    <div class="bottom-bar">
+      <button class="shutter-btn" id="capture-btn" aria-label="Take Photo">
+        <div class="shutter-btn-inner"></div>
+      </button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
