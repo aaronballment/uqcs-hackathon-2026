@@ -1,29 +1,29 @@
 import os
-import io
+import re
 import base64
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from google.cloud import vision  # Import Google Cloud Vision SDK
+from google import genai
+from google.genai import types
 import graphing
-import re
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = ["*"],
-    allow_credentials = True,
-    allow_methods = ["*"],
-    allow_headers = ["*"]
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
 
-
-print("Initializing Google Cloud Vision Client...")
-vision_client = vision.ImageAnnotatorClient()
-print("Vision Client ready!")
+# Initializes using the GEMINI_API_KEY environment variable
+print("Initializing Gemini Client...")
+gemini_client = genai.Client()
+print("Gemini Client ready!")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLIENT_DIR = os.path.join(BASE_DIR, "client")
@@ -40,44 +40,63 @@ async def read_index():
     return FileResponse(os.path.join(CLIENT_DIR, "index.html"))
 
 @app.post("/api/extract-math")
-async def extract_math(payload: ImagePayload):
+async def extract_math(payload: ImagePayload, x_min, x_max):
     try:
+        # Extract base64 and determine mime type safely
         if "," in payload.image:
-            base64_data = payload.image.split(",")[1]
+            header, base64_data = payload.image.split(",", 1)
+            mime_match = re.search(r'data:(.*?);base64', header)
+            mime_type = mime_match.group(1) if mime_match else "image/jpeg"
         else:
             base64_data = payload.image
+            mime_type = "image/jpeg"
 
         image_bytes = base64.b64decode(base64_data)
-        vision_image = vision.Image(content=image_bytes)
 
-        response = vision_client.document_text_detection(image=vision_image)
+        # System/user prompt directing the model to output ONLY raw LaTeX
+        prompt = (
+            "You are an expert mathematical OCR tool. "
+            "Extract the primary handwritten function or expression from the image. "
+            "Return ONLY the LaTeX string suitable for parsing (e.g., x^2 - 4 or 2*x + 1). "
+            "do not include the variable axis only the equation example if y=x^2 return x^2"
+            "Do not include markdown code blocks, backticks, explanations, or label headers."
+        )
 
-        if response.error.message:
-            raise Exception(f"Google Vision API Error: {response.error.message}")
+        # Request extraction from Gemini 2.5 Flash
+        response = gemini_client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=[
+                types.Part.from_bytes(data=image_bytes, mime_type=mime_type),
+                prompt
+            ]
+        )
 
-        # Extract text annotations
-        extracted_text = response.full_text_annotation.text if response.full_text_annotation else ""
+        extracted_text = response.text.strip()
 
-        # Clean up whitespace/newlines
-        extracted_text = extracted_text.strip()
+        # Clean any accidental markdown backticks or code fencing
+        extracted_text = re.sub(r'^```(?:latex)?|```$', '', extracted_text, flags=re.MULTILINE).strip()
 
         print("\n" + "="*40)
-        print(" [Google Vision Result]:", extracted_text)
+        print(" [Gemini Result]:", extracted_text)
         print("="*40 + "\n")
 
-        # Return key matching your front-end expectation
-        try: 
-            print(f"extracted text: {extracted_text}")
-            graphing.latex_conversion(extracted_text,extracted_text)
-        except Exception as e:
-            print(f"[Graphing Error]: {e}")
-            return {"error": f"Text we extracted: {extracted_text}, if this was not your function please try again."}
-
+        # Sanitize filename for output plot creation
         safe_filename = re.sub(r'[/\\:*?"<>|]', '_', extracted_text).strip()
         if not safe_filename:
             safe_filename = "output_plot"
         filename = f"{safe_filename}.png"
         clean_filename = os.path.basename(filename)
+
+        # Attempt graphing conversion
+        try: 
+            print(f"Extracted math: {extracted_text}")
+            graphing.latex_conversion(extracted_text, clean_filename,  x_min, x_max)
+        except Exception as e:
+            print(f"[Graphing Error]: {e}")
+            return {
+                "error": f"Extracted '{extracted_text}', but failed to plot image.",
+                "latex": extracted_text
+            }
 
         return {"latex": extracted_text, "filename": clean_filename}
 
@@ -85,10 +104,8 @@ async def extract_math(payload: ImagePayload):
         print(f"[OCR Error]: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# 1. Mount the /plots endpoint to expose the plots/ folder to the browser
+# Mount client and static endpoints
 app.mount("/plots", StaticFiles(directory=PLOTS_DIR), name="plots")
-
-# 2. Mount client directory for static frontend files
 app.mount("", StaticFiles(directory=CLIENT_DIR, html=True), name="client")
 
 if __name__ == "__main__":

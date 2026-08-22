@@ -3,8 +3,14 @@ const captureBtn = document.getElementById('capture-btn');
 const closeBtn = document.getElementById('close-btn');
 const bottomBar = document.getElementById('bottom-bar');
 const loadingOverlay = document.getElementById('loading-overlay');
+const domainOverlay = document.getElementById('domain-overlay');
+const setDomainBtn = document.getElementById('set-domain-btn');
+const xMinInput = document.getElementById('x-min');
+const xMaxInput = document.getElementById('x-max');
 
 let currentAbortController = null;
+let domainMin = -10;
+let domainMax = 10;
 
 // Initialize native webcam
 async function initCamera() {
@@ -19,6 +25,23 @@ async function initCamera() {
     alert("Unable to access the camera. Please allow camera permissions.");
   }
 }
+
+// Confirm domain selection overlay and unveil camera shutter
+setDomainBtn.addEventListener('click', () => {
+  const minVal = parseFloat(xMinInput.value);
+  const maxVal = parseFloat(xMaxInput.value);
+
+  if (isNaN(minVal) || isNaN(maxVal) || minVal >= maxVal) {
+    alert("Please enter a valid range where Min X is strictly less than Max X.");
+    return;
+  }
+
+  domainMin = minVal;
+  domainMax = maxVal;
+
+  domainOverlay.classList.add('hidden');
+  bottomBar.classList.remove('hidden');
+});
 
 function showProcessingState() {
   bottomBar.classList.add('hidden');
@@ -53,20 +76,25 @@ captureBtn.addEventListener('click', async () => {
   currentAbortController = new AbortController();
 
   try {
-    // 3. Post base64 payload to backend
+    // 3. Post base64 payload and domain parameters to backend
     const response = await fetch('/api/extract-math', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: base64Image }),
+      body: JSON.stringify({ 
+        image: base64Image,
+        x_min: domainMin,
+        x_max: domainMax
+      }),
       signal: currentAbortController.signal
     });
 
     if (!response.ok) throw new Error("Failed to process image.");
 
     const data = await response.json();
-    if (data.error){
-      console.alert(data.error)
-    } else{
+    if (data.error) {
+      alert(data.error);
+      resetState();
+    } else {
       window.location.href = `/AR.html?filename=${encodeURIComponent(data.filename)}`;
     }
     
