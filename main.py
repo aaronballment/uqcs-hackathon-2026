@@ -68,8 +68,11 @@ async def extract_math(payload: ImagePayload):
         print("="*40 + "\n")
 
         # Return key matching your front-end expectation
+
+        FILENAME = "current_graph.png"
+
         try: 
-            latex_conversion(extracted_text,extracted_text)
+            latex_conversion(extracted_text, FILENAME)
         except Exception as e:
             print(e)
 
