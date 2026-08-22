@@ -67,6 +67,7 @@ async def extract_math(payload: ImagePayload):
 
         # Return key matching your front-end expectation
         try: 
+            print(f"extracted text: {extracted_text}")
             graphing.latex_conversion(extracted_text,extracted_text)
         except Exception as e:
             print(f"[Graphing Error]: {e}")
