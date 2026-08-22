@@ -14,11 +14,21 @@
 
     <!-- Header Overlay -->
     <header class="top-bar">
+      <!-- Close / Reset Button (Hidden by default) -->
+      <button class="close-btn hidden" id="close-btn" aria-label="Cancel and retake">
+        &#10005;
+      </button>
       <h1>AR Graphs</h1>
     </header>
 
+    <!-- Loading Screen Overlay (Hidden by default) -->
+    <div class="loading-overlay hidden" id="loading-overlay">
+      <div class="spinner"></div>
+      <p>Extracting equation...</p>
+    </div>
+
     <!-- Shutter Button Overlay -->
-    <div class="bottom-bar">
+    <div class="bottom-bar" id="bottom-bar">
       <button class="shutter-btn" id="capture-btn" aria-label="Take Photo">
         <div class="shutter-btn-inner"></div>
       </button>
