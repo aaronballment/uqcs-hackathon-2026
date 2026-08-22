@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 #from main import extract_math
 
 
-def latex_conversion(latex: str, filename: str, ) -> bool:
+def latex_conversion(latex: str, filename: str,x_min, x_max ) -> bool:
     expression = parse_latex(latex)
     x = sp.Symbol("x")
     
@@ -52,6 +52,6 @@ def latex_conversion(latex: str, filename: str, ) -> bool:
 
 
 if __name__ == "__main__":
-    latex_conversion(r"x^2 - 4", "test_plot2.png")
+    latex_conversion(r"x^2 - 4", "test_plot2.png", -10, 10)
     print("SUCCESS")
     
