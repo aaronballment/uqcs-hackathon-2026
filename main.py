@@ -71,12 +71,12 @@ async def extract_math(payload: ImagePayload):
             graphing.latex_conversion(extracted_text,extracted_text)
         except Exception as e:
             print(f"[Graphing Error]: {e}")
+            return {"error": f"Text we extracted: {extracted_text}, if this was not your function please try again."}
 
         safe_filename = re.sub(r'[/\\:*?"<>|]', '_', extracted_text).strip()
         if not safe_filename:
             safe_filename = "output_plot"
         filename = f"{safe_filename}.png"
-        file_path = os.path.join(PLOTS_DIR, filename)
         clean_filename = os.path.basename(filename)
 
         return {"latex": extracted_text, "filename": clean_filename}

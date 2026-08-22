@@ -18,7 +18,7 @@ def latex_conversion(latex: str, filename: str, ) -> bool:
 
     fig, ax = plt.subplots(figsize=(6, 6))
 
-    ax.plot(x_values, y_values, color='#00ffcc')
+    ax.plot(x_values, y_values, color='#00ffcc', linewidth=3.5)
 
     output_dir = "plots"
     os.makedirs(output_dir, exist_ok=True)

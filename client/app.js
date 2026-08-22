@@ -64,10 +64,11 @@ captureBtn.addEventListener('click', async () => {
     if (!response.ok) throw new Error("Failed to process image.");
 
     const data = await response.json();
-    console.log("Extraction complete:", data);
-
-    // 4. Redirect to AR.html with the target image filename in query params
-    window.location.href = `/AR.html?filename=${encodeURIComponent(data.filename)}`;
+    if (data.error){
+      console.alert(data.error)
+    } else{
+      window.location.href = `/AR.html?filename=${encodeURIComponent(data.filename)}`;
+    }
     
   } catch (err) {
     if (err.name === 'AbortError') {
