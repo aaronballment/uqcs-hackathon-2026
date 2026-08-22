@@ -29,77 +29,40 @@
 </head>
 <body style="margin: 0; overflow: hidden;">
     <button id="change-btn" onclick="goToIndex()">Change Function</button>
+    
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
         
         <a-camera position="0 1.6 0"></a-camera>
 
-        <!-- Matplotlib Graph Plane -->
-        <!-- Positioned lower and tilted flat so it rests naturally in your camera view -->
-        <a-plane 
-            id="matplotlib-graph" 
-            position="0 -1.0 -4.0" 
-            rotation="-75 0 0" 
-            width="3" 
-            height="3" 
-            material="src: url(https://your-ngrok-subdomain.ngrok-free.app/get-graph); transparent: true; alphaTest: 0.5;">
-        </a-plane>
+        <!-- CONTAINER WRAPPER: This anchors items in world space so they stay sticky -->
+        <a-entity id="graph-container" position="0 -1.2 -5" rotation="-75 0 0">
+            <!-- Matplotlib Graph Plane nested securely inside the sticky container -->
+            <a-plane 
+                id="matplotlib-graph" 
+                width="3" 
+                height="3" 
+                material="transparent: true; alphaTest: 0.5;">
+            </a-plane>
+        </a-entity>
         
     </a-scene>
 
     <script>
-        const container = document.querySelector('#graph-container');
+        // 1. DEFINE YOUR BACKEND VARIABLE HERE
+        const BACKEND_URL = "https://your-ngrok-subdomain.ngrok-free.app";
 
-        // 1. ADD THE FUNCTION TITLE / EQUATION TEXT
-        let eqText = document.createElement('a-text');
-        eqText.setAttribute('value', 'f(x) = x');
-        eqText.setAttribute('position', '-0.2 1.1 0'); // Positioned above the graph
-        eqText.setAttribute('scale', '0.8 0.8 0.8');
-        eqText.setAttribute('color', '#ffffff');
-        container.appendChild(eqText);
-
-        // 2. DRAW THE X AND Y AXES WITH TICKS
-        // Y-Axis
-        let yAxis = document.createElement('a-cylinder');
-        yAxis.setAttribute('radius', '0.003');
-        yAxis.setAttribute('height', '2');
-        yAxis.setAttribute('position', '0 0 0');
-        yAxis.setAttribute('color', '#aaaaaa');
-        container.appendChild(yAxis);
-
-        // X-Axis
-        let xAxis = document.createElement('a-cylinder');
-        xAxis.setAttribute('radius', '0.003');
-        xAxis.setAttribute('height', '2');
-        xAxis.setAttribute('rotation', '0 0 90');
-        xAxis.setAttribute('position', '0 0 0');
-        xAxis.setAttribute('color', '#aaaaaa');
-        container.appendChild(xAxis);
-
-        // Add Axis Ticks (Hash marks for scale)
-        for (let i = -0.8; i <= 0.8; i += 0.2) {
-            if (i === 0) continue; // Skip origin
+        // 2. AUTOMATICALLY LOAD THE GRAPH ON PAGE START
+        window.addEventListener('DOMContentLoaded', () => {
+            const graphPlane = document.querySelector('#matplotlib-graph');
             
-            // Y-axis ticks
-            let yTick = document.createElement('a-box');
-            yTick.setAttribute('width', '0.04');
-            yTick.setAttribute('height', '0.005');
-            yTick.setAttribute('depth', '0.005');
-            yTick.setAttribute('position', `0 ${i} 0`);
-            yTick.setAttribute('color', '#ffffff');
-            container.appendChild(yTick);
-
-            // X-axis ticks
-            let xTick = document.createElement('a-box');
-            xTick.setAttribute('width', '0.005');
-            xTick.setAttribute('height', '0.04');
-            xTick.setAttribute('depth', '0.005');
-            xTick.setAttribute('position', `${i} 0 0`);
-            xTick.setAttribute('color', '#ffffff');
-            container.appendChild(xTick);
-        }
+            // Construct the full image endpoint URL with a cache-buster so it always fetches fresh
+            const imageUrl = `${BACKEND_URL}/get-graph?t=${Date.now()}`;
+            
+            // Inject it into the A-Frame plane dynamically
+            graphPlane.setAttribute('material', `src: url(${imageUrl}); transparent: true; alphaTest: 0.5;`);
+        });
         
         function goToIndex() {
-            // Sends the user straight back to your teammate's input page
             window.location.href = 'client/index.html';
         }
     </script>
