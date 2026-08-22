@@ -20,7 +20,6 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-# Initializes using the GEMINI_API_KEY environment variable
 print("Initializing Gemini Client...")
 gemini_client = genai.Client()
 print("Gemini Client ready!")
@@ -29,18 +28,20 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLIENT_DIR = os.path.join(BASE_DIR, "client")
 PLOTS_DIR = os.path.join(BASE_DIR, "plots")
 
-# Ensure the plots directory exists
 os.makedirs(PLOTS_DIR, exist_ok=True)
 
+# Add x_min and x_max to the Pydantic model with default fallback values
 class ImagePayload(BaseModel):
     image: str
+    x_min: float = -10.0
+    x_max: float = 10.0
 
 @app.get("/")
 async def read_index():
     return FileResponse(os.path.join(CLIENT_DIR, "index.html"))
 
 @app.post("/api/extract-math")
-async def extract_math(payload: ImagePayload, x_min, x_max):
+async def extract_math(payload: ImagePayload):
     try:
         # Extract base64 and determine mime type safely
         if "," in payload.image:
@@ -53,7 +54,6 @@ async def extract_math(payload: ImagePayload, x_min, x_max):
 
         image_bytes = base64.b64decode(base64_data)
 
-        # System/user prompt directing the model to output ONLY raw LaTeX
         prompt = (
             "You are an expert mathematical OCR tool. "
             "Extract the primary handwritten function or expression from the image. "
@@ -62,7 +62,6 @@ async def extract_math(payload: ImagePayload, x_min, x_max):
             "Do not include markdown code blocks, backticks, explanations, or label headers."
         )
 
-        # Request extraction from Gemini 2.5 Flash
         response = gemini_client.models.generate_content(
             model='gemini-2.5-flash',
             contents=[
@@ -72,25 +71,22 @@ async def extract_math(payload: ImagePayload, x_min, x_max):
         )
 
         extracted_text = response.text.strip()
-
-        # Clean any accidental markdown backticks or code fencing
         extracted_text = re.sub(r'^```(?:latex)?|```$', '', extracted_text, flags=re.MULTILINE).strip()
 
         print("\n" + "="*40)
         print(" [Gemini Result]:", extracted_text)
         print("="*40 + "\n")
 
-        # Sanitize filename for output plot creation
         safe_filename = re.sub(r'[/\\:*?"<>|]', '_', extracted_text).strip()
         if not safe_filename:
             safe_filename = "output_plot"
         filename = f"{safe_filename}.png"
         clean_filename = os.path.basename(filename)
 
-        # Attempt graphing conversion
         try: 
             print(f"Extracted math: {extracted_text}")
-            graphing.latex_conversion(extracted_text, clean_filename,  x_min, x_max)
+            # Access values directly from payload
+            graphing.latex_conversion(extracted_text, clean_filename, payload.x_min, payload.x_max)
         except Exception as e:
             print(f"[Graphing Error]: {e}")
             return {
@@ -104,7 +100,6 @@ async def extract_math(payload: ImagePayload, x_min, x_max):
         print(f"[OCR Error]: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Mount client and static endpoints
 app.mount("/plots", StaticFiles(directory=PLOTS_DIR), name="plots")
 app.mount("", StaticFiles(directory=CLIENT_DIR, html=True), name="client")
 

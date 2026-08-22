@@ -3,16 +3,13 @@ const captureBtn = document.getElementById('capture-btn');
 const closeBtn = document.getElementById('close-btn');
 const bottomBar = document.getElementById('bottom-bar');
 const loadingOverlay = document.getElementById('loading-overlay');
-const domainOverlay = document.getElementById('domain-overlay');
-const setDomainBtn = document.getElementById('set-domain-btn');
+const domainControls = document.getElementById('domain-controls');
 const xMinInput = document.getElementById('x-min');
 const xMaxInput = document.getElementById('x-max');
 
 let currentAbortController = null;
-let domainMin = -10;
-let domainMax = 10;
 
-// Initialize native webcam
+// Initialize camera feed with fallback play trigger
 async function initCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -20,31 +17,19 @@ async function initCamera() {
       audio: false
     });
     video.srcObject = stream;
+
+    video.onloadedmetadata = () => {
+      video.play().catch(err => console.error("Playback failed:", err));
+    };
   } catch (err) {
     console.error("Camera access error:", err);
     alert("Unable to access the camera. Please allow camera permissions.");
   }
 }
 
-// Confirm domain selection overlay and unveil camera shutter
-setDomainBtn.addEventListener('click', () => {
-  const minVal = parseFloat(xMinInput.value);
-  const maxVal = parseFloat(xMaxInput.value);
-
-  if (isNaN(minVal) || isNaN(maxVal) || minVal >= maxVal) {
-    alert("Please enter a valid range where Min X is strictly less than Max X.");
-    return;
-  }
-
-  domainMin = minVal;
-  domainMax = maxVal;
-
-  domainOverlay.classList.add('hidden');
-  bottomBar.classList.remove('hidden');
-});
-
 function showProcessingState() {
   bottomBar.classList.add('hidden');
+  domainControls.classList.add('hidden');
   loadingOverlay.classList.remove('hidden');
   closeBtn.classList.remove('hidden');
 }
@@ -56,18 +41,27 @@ function resetState() {
   }
   loadingOverlay.classList.add('hidden');
   closeBtn.classList.add('hidden');
+  domainControls.classList.remove('hidden');
   bottomBar.classList.remove('hidden');
 }
 
 window.addEventListener('DOMContentLoaded', initCamera);
 
 captureBtn.addEventListener('click', async () => {
+  const minVal = parseFloat(xMinInput.value);
+  const maxVal = parseFloat(xMaxInput.value);
+
+  if (isNaN(minVal) || isNaN(maxVal) || minVal >= maxVal) {
+    alert("Please enter a valid range where Min X is strictly less than Max X.");
+    return;
+  }
+
   showProcessingState();
 
   // 1. Capture frame to canvas
   const canvas = document.createElement('canvas');
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = video.videoWidth || 1280;
+  canvas.height = video.videoHeight || 720;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
@@ -82,8 +76,8 @@ captureBtn.addEventListener('click', async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         image: base64Image,
-        x_min: domainMin,
-        x_max: domainMax
+        x_min: minVal,
+        x_max: maxVal
       }),
       signal: currentAbortController.signal
     });
