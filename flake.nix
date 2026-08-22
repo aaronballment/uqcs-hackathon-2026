@@ -16,6 +16,7 @@
               matplotlib
               numpy
               sympy
+              google-cloud-vision
             ]
           ))
         ];
