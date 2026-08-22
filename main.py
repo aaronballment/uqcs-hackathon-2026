@@ -20,6 +20,7 @@ app.add_middleware(
     allow_headers = ["*"]
 )
 
+
 print("Initializing Google Cloud Vision Client...")
 vision_client = vision.ImageAnnotatorClient()
 print("Vision Client ready!")
