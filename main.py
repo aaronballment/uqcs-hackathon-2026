@@ -73,7 +73,9 @@ async def extract_math(payload: ImagePayload):
         except Exception as e:
             print(e)
 
-        return {"latex": extracted_text}
+        filename= filename = f"{extracted_text}.png" if extracted_text else "default.png"
+
+        return {"latex": extracted_text, "filename": filename}
 
     except Exception as e:
         print(f"[OCR Error]: {e}")
