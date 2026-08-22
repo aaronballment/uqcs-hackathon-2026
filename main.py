@@ -1,5 +1,6 @@
 import os
 import re
+import uuid
 import base64
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
@@ -30,11 +31,12 @@ PLOTS_DIR = os.path.join(BASE_DIR, "plots")
 
 os.makedirs(PLOTS_DIR, exist_ok=True)
 
-# Add x_min and x_max to the Pydantic model with default fallback values
 class ImagePayload(BaseModel):
     image: str
     x_min: float = -10.0
     x_max: float = 10.0
+    y_min: float = -10.0
+    y_max: float = 10.0
 
 @app.get("/")
 async def read_index():
@@ -57,8 +59,8 @@ async def extract_math(payload: ImagePayload):
         prompt = (
             "You are an expert mathematical OCR tool. "
             "Extract the primary handwritten function or expression from the image. "
-            "Return ONLY the LaTeX string suitable for parsing (e.g., x^2 - 4 or 2*x + 1). "
-            "do not include the variable axis only the equation example if y=x^2 return x^2"
+            "Return ONLY the raw LaTeX right-hand-side mathematical expression suitable for SymPy parsing (e.g., x^2 - 4 or x^2 + y^2). "
+            "Do not include the dependent variable or equals sign (e.g., if y = x^2, return x^2; if z = x^2 + y^2, return x^2 + y^2). "
             "Do not include markdown code blocks, backticks, explanations, or label headers."
         )
 
@@ -73,28 +75,40 @@ async def extract_math(payload: ImagePayload):
         extracted_text = response.text.strip()
         extracted_text = re.sub(r'^```(?:latex)?|```$', '', extracted_text, flags=re.MULTILINE).strip()
 
+        # Handle fallback if Gemini returns an equals sign despite prompt instructions
+        if "=" in extracted_text:
+            extracted_text = extracted_text.split("=")[-1].strip()
+
         print("\n" + "="*40)
         print(" [Gemini Result]:", extracted_text)
         print("="*40 + "\n")
 
-        safe_filename = re.sub(r'[/\\:*?"<>|]', '_', extracted_text).strip()
-        if not safe_filename:
-            safe_filename = "output_plot"
-        filename = f"{safe_filename}.png"
-        clean_filename = os.path.basename(filename)
-        extracted_text = extracted_text.split("=")[1]
+        # Unique file ID to prevent browser image caching issues
+        unique_id = str(uuid.uuid4())[:8]
+        base_filename = f"graph_{unique_id}"
+
         try: 
             print(f"Extracted math: {extracted_text}")
-            # Access values directly from payload
-            graphing.latex_conversion(extracted_text, clean_filename, payload.x_min, payload.x_max)
+            out_filename, is_3d = graphing.process_latex_input(
+                latex=extracted_text, 
+                base_filename=base_filename, 
+                x_min=payload.x_min, 
+                x_max=payload.x_max,
+                y_min=payload.y_min,
+                y_max=payload.y_max
+            )
         except Exception as e:
             print(f"[Graphing Error]: {e}")
             return {
-                "error": f"Extracted '{extracted_text}', but failed to plot image.",
+                "error": f"Extracted '{extracted_text}', but failed to process plot.",
                 "latex": extracted_text
             }
 
-        return {"latex": extracted_text, "filename": clean_filename}
+        return {
+            "latex": extracted_text, 
+            "filename": out_filename,
+            "is_3d": is_3d
+        }
 
     except Exception as e:
         print(f"[OCR Error]: {e}")
