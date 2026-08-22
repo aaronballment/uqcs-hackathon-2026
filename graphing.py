@@ -3,6 +3,7 @@ import sympy as sp
 import os
 from sympy.parsing.latex import parse_latex
 import matplotlib.pyplot as plt
+#from main import extract_math
 
 
 def latex_conversion(latex: str, filename: str, ) -> bool:
@@ -30,5 +31,5 @@ def latex_conversion(latex: str, filename: str, ) -> bool:
 
 
 if __name__ == "__main__":
-    latex_conversion(r"x^2 - 4", "test_plot.png")
+    latex_conversion(r"x^2 - 4", "test_plot2.png")
     print("SUCCESS")
