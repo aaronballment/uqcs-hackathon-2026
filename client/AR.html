@@ -64,7 +64,7 @@
         
         <a-camera position="0 1.6 0"></a-camera>
 
-            <a-entity id="graph-container" position="0 -1.6 -4" rotation="-20 0 0">
+            <a-entity id="graph-container" smooth-follow="distance: 2.2; yOffset: -0.2; speed: 0.07">
                 <a-plane 
                     id="matplotlib-graph" 
                     width="3" 
@@ -102,6 +102,38 @@
                 console.log(`Loading image from: ${imageUrl}`);
             } else {
                 console.error("No filename parameter provided in the URL.");
+            }
+        });
+
+        AFRAME.registerComponent('smooth-follow', {
+            schema: {
+                distance: { type: 'number', default: 2.2 }, // Distance in front of camera (metres)
+                yOffset:  { type: 'number', default: -0.2 }, // Vertical offset (slightly below eye level)
+                speed:    { type: 'number', default: 0.06 }  // Lerp speed (lower = floatier/more 3D lag)
+            },
+            init: function () {
+                this.camera = document.querySelector('a-camera') || this.el.sceneEl.camera.el;
+                this.targetPos = new THREE.Vector3();
+                this.camPos = new THREE.Vector3();
+                this.camDir = new THREE.Vector3();
+            },
+            tick: function () {
+                if (!this.camera) return;
+
+                const camObj = this.camera.object3D;
+
+                // Calculate the target coordinate directly in front of where the camera is pointing
+                camObj.getWorldPosition(this.camPos);
+                camObj.getWorldDirection(this.camDir);
+
+                this.targetPos.copy(this.camPos).addScaledVector(this.camDir, -this.data.distance);
+                this.targetPos.y += this.data.yOffset;
+
+                // Smoothly interpolate (glide) the position towards the centre of view
+                this.el.object3D.position.lerp(this.targetPos, this.data.speed);
+
+                // Smoothly match camera rotation while preserving a natural viewing angle
+                this.el.object3D.quaternion.slerp(camObj.quaternion, this.data.speed);
             }
         });
 
