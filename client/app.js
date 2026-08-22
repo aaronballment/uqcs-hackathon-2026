@@ -6,13 +6,11 @@ const loadingOverlay = document.getElementById('loading-overlay');
 
 let currentAbortController = null;
 
-// Access the device rear camera
+// Initialize native webcam
 async function initCamera() {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' }
-      },
+      video: { facingMode: { ideal: 'environment' } },
       audio: false
     });
     video.srcObject = stream;
@@ -22,17 +20,15 @@ async function initCamera() {
   }
 }
 
-// Switch UI to loading state
 function showProcessingState() {
   bottomBar.classList.add('hidden');
   loadingOverlay.classList.remove('hidden');
   closeBtn.classList.remove('hidden');
 }
 
-// Reset UI to capture state
 function resetState() {
   if (currentAbortController) {
-    currentAbortController.abort(); // Cancel ongoing fetch if user presses cross
+    currentAbortController.abort();
     currentAbortController = null;
   }
   loadingOverlay.classList.add('hidden');
@@ -40,29 +36,24 @@ function resetState() {
   bottomBar.classList.remove('hidden');
 }
 
-// Initialize stream on load
 window.addEventListener('DOMContentLoaded', initCamera);
 
-// Handle capture
 captureBtn.addEventListener('click', async () => {
-  // 1. Show UI processing state
   showProcessingState();
 
-  // 2. Draw current video frame to canvas
+  // 1. Capture frame to canvas
   const canvas = document.createElement('canvas');
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   const ctx = canvas.getContext('2d');
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  // 3. Export canvas to Base64
+  // 2. Export base64 image
   const base64Image = canvas.toDataURL('image/jpeg', 0.8);
-
-  // Setup abort controller so user can cancel via the cross button
   currentAbortController = new AbortController();
 
-  // 4. Send payload to FastAPI endpoint
   try {
+    // 3. Post base64 payload to backend
     const response = await fetch('/api/extract-math', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -70,26 +61,23 @@ captureBtn.addEventListener('click', async () => {
       signal: currentAbortController.signal
     });
 
+    if (!response.ok) throw new Error("Failed to process image.");
+
     const data = await response.json();
-    console.log("Parsed Math String:", data.latex);
-    
-    // Hide loading indicator after request completes
-    loadingOverlay.classList.add('hidden');
-    
-    alert(`Extracted Equation: ${data.latex}`);
-    
-    // Ready for integrating your 3D model canvas/view here!
+    console.log("Extraction complete:", data);
+
+    // 4. Redirect to AR.html with the target image filename in query params
+    window.location.href = `/AR.html?filename=${encodeURIComponent(data.filename)}`;
     
   } catch (err) {
     if (err.name === 'AbortError') {
-      console.log('API request aborted by user.');
+      console.log('API request aborted.');
     } else {
-      console.error("Extraction failed:", err);
-      alert("Failed to process image. Please try again.");
+      console.error("Pipeline error:", err);
+      alert("Failed to process image or generate plot.");
       resetState();
     }
   }
 });
 
-// Handle cross button click (returns user back to photo mode)
 closeBtn.addEventListener('click', resetState);
