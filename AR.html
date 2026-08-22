@@ -48,18 +48,31 @@
     </a-scene>
 
     <script>
-        // 1. DEFINE YOUR BACKEND VARIABLE HERE
+        // Your active ngrok URL
         const BACKEND_URL = "https://your-ngrok-subdomain.ngrok-free.app";
 
-        // 2. AUTOMATICALLY LOAD THE GRAPH ON PAGE START
-        window.addEventListener('DOMContentLoaded', () => {
-            const graphPlane = document.querySelector('#matplotlib-graph');
-            
-            // Construct the full image endpoint URL with a cache-buster so it always fetches fresh
-            const imageUrl = `${BACKEND_URL}/get-graph?t=${Date.now()}`;
-            
-            // Inject it into the A-Frame plane dynamically
-            graphPlane.setAttribute('material', `src: url(${imageUrl}); transparent: true; alphaTest: 0.5;`);
+        // Explicit HTTP Fetch Request on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 1. Make the HTTP GET request to your FastAPI backend
+                const response = await fetch(`${BACKEND_URL}/get-graph?t=${Date.now()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // 2. Turn the incoming PNG binary stream into a local object URL
+                const imageBlob = await response.blob();
+                const imageObjectURL = URL.createObjectURL(imageBlob);
+
+                // 3. Apply the blob URL to your A-Frame plane
+                const graphPlane = document.querySelector('#matplotlib-graph');
+                graphPlane.setAttribute('material', `src: url(${imageObjectURL}); transparent: true; alphaTest: 0.5;`);
+
+                console.log("Graph loaded successfully via HTTP fetch!");
+            } catch (error) {
+                console.error("Failed to fetch graph from backend:", error);
+            }
         });
         
         function goToIndex() {
