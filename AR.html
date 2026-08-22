@@ -8,15 +8,21 @@
 </head>
 <body style="margin: 0; overflow: hidden;">
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
-    
-    <!-- Camera that floats in the world -->
-    <a-camera position="0 1.6 0"></a-camera>
+        
+        <a-camera position="0 1.6 0"></a-camera>
 
-    <!-- Updated container: Positioned lower and tilted flat (-75deg) to look like it's on a desk -->
-    <a-entity id="graph-container" position="0 -0.8 -2.8" rotation="-75 0 0" scale="0.7 0.7 0.7">
-        <!-- Your math loop injects here -->
-    </a-entity>
-</a-scene>
+        <!-- Matplotlib Graph Plane -->
+        <!-- Positioned lower and tilted flat so it rests naturally in your camera view -->
+        <a-plane 
+            id="matplotlib-graph" 
+            position="0 -1.0 -4.0" 
+            rotation="-75 0 0" 
+            width="3" 
+            height="3" 
+            material="src: url(https://your-ngrok-subdomain.ngrok-free.app/get-graph); transparent: true; alphaTest: 0.5;">
+        </a-plane>
+        
+    </a-scene>
 
     <script>
         const container = document.querySelector('#graph-container');
