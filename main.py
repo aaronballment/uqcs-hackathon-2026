@@ -82,7 +82,7 @@ async def extract_math(payload: ImagePayload):
             safe_filename = "output_plot"
         filename = f"{safe_filename}.png"
         clean_filename = os.path.basename(filename)
-
+        extracted_text = extracted_text.split("=")[1]
         try: 
             print(f"Extracted math: {extracted_text}")
             # Access values directly from payload

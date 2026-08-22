@@ -190,7 +190,7 @@ video {
 /* Bottom Bar */
 .bottom-bar {
   position: absolute;
-  bottom: 4rem;
+  bottom: 2rem;
   left: 0;
   width: 100%;
   padding-bottom: 2rem;
@@ -199,7 +199,7 @@ video {
   align-items: center;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
   z-index: 10;
-  margin-bottom: 1.5rem;
+  margin-bottom: 0rem;
 }
 
 .shutter-btn {
