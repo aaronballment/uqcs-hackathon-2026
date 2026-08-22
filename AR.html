@@ -5,8 +5,30 @@
     <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
     <!-- Include AR.js for the camera background feed -->
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        #change-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            background-color: #FF5733;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        #change-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+    </style>
 </head>
 <body style="margin: 0; overflow: hidden;">
+    <button id="change-btn" onclick="goToIndex()">Change Function</button>
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
         
         <a-camera position="0 1.6 0"></a-camera>
@@ -75,31 +97,10 @@
             xTick.setAttribute('color', '#ffffff');
             container.appendChild(xTick);
         }
-
-        // 3. DRAW THE SOLID CONTINUOUS LINE FOR f(x) = x
-        let prevX = -1;
-        let prevY = prevX;
-
-        for (let x = -1; x <= 1; x += 0.02) { // Smaller step size for a buttery-smooth line
-            let currentY = x;
-
-            let lineSegment = document.createElement('a-entity');
-            let midX = (prevX + x) / 2;
-            let midY = (prevY + currentY) / 2;
-            let length = Math.sqrt(Math.pow(x - prevX, 2) + Math.pow(currentY - prevY, 2));
-
-            // Slightly thicker radius (0.01) so it forms a solid stroke
-            lineSegment.setAttribute('geometry', `primitive: cylinder; radius: 0.01; height: ${length}`);
-            lineSegment.setAttribute('material', 'color: #FF5733; shader: flat;');
-            
-            let angle = Math.atan2(currentY - prevY, x - prevX) * (180 / Math.PI);
-            lineSegment.setAttribute('position', `${midX} ${midY} 0`);
-            lineSegment.setAttribute('rotation', `0 0 ${angle}`);
-
-            container.appendChild(lineSegment);
-
-            prevX = x;
-            prevY = currentY;
+        
+        function goToIndex() {
+            // Sends the user straight back to your teammate's input page
+            window.location.href = 'client/index.html';
         }
     </script>
 </body>
