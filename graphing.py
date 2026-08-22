@@ -1,5 +1,6 @@
 import numpy as np
 import sympy as sp
+import os
 from sympy.parsing.latex import parse_latex
 import matplotlib.pyplot as plt
 
@@ -18,8 +19,11 @@ def latex_conversion(latex: str, filename: str, ) -> bool:
 
     ax.plot(x_values, y_values, color='#00ffcc')
 
+    output_dir = "plots"
+    os.makedirs(output_dir, exist_ok=True)
+    filepath = os.path.join(output_dir, filename)
 
-    plt.savefig(filename, transparent = True)
+    plt.savefig(filepath, transparent = True)
     plt.close()
 
     return True

@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from google.cloud import vision  # Import Google Cloud Vision SDK
+import graphing
 
 app = FastAPI()
 
@@ -58,6 +59,11 @@ async def extract_math(payload: ImagePayload):
         print("="*40 + "\n")
 
         # Return key matching your front-end expectation
+        try: 
+            graphing.latex_conversion(extracted_text,extracted_text)
+        except Exception as e:
+            print(e)
+
         return {"latex": extracted_text}
 
     except Exception as e:
