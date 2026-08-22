@@ -12,12 +12,10 @@ body, html {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Helper Class */
 .hidden {
   display: none !important;
 }
 
-/* Container holding the video feed */
 .camera-container {
   position: relative;
   width: 100vw;
@@ -29,7 +27,6 @@ body, html {
   background-color: #000;
 }
 
-/* Video element covering the screen */
 video {
   position: absolute;
   top: 0;
@@ -41,7 +38,6 @@ video {
   display: block;
 }
 
-/* Top Navigation Bar Overlay */
 .top-bar {
   position: absolute;
   top: 0;
@@ -64,7 +60,6 @@ video {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
-/* Close (Cross) Button */
 .close-btn {
   position: absolute;
   left: 20px;
@@ -84,10 +79,6 @@ video {
   -webkit-tap-highlight-color: transparent;
 }
 
-.close-btn:active {
-  background: rgba(255, 255, 255, 0.4);
-}
-
 /* Floating Top-Left Domain Controls */
 .domain-controls {
   position: absolute;
@@ -95,8 +86,12 @@ video {
   left: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   z-index: 12;
+}
+
+.domain-chip-wrapper {
+  position: relative;
 }
 
 .domain-input-chip {
@@ -110,6 +105,9 @@ video {
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  user-select: none;
+  width: fit-content;
 }
 
 .domain-input-chip label {
@@ -118,27 +116,38 @@ video {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  pointer-events: none;
 }
 
-.domain-input-chip input {
-  width: 50px;
-  background: transparent;
-  border: none;
+.chip-val {
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
+  min-width: 30px;
   text-align: right;
-  outline: none;
+  pointer-events: none;
 }
 
-/* Remove arrows from number inputs */
-.domain-input-chip input::-webkit-outer-spin-button,
-.domain-input-chip input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
+/* Slider Popups */
+.slider-popup {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 6px);
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 15;
 }
-.domain-input-chip input[type=number] {
-  -moz-appearance: textfield;
+
+.slider-popup input[type="range"] {
+  accent-color: #ffffff;
+  width: 120px;
+  cursor: pointer;
+  display: block;
 }
 
 /* Loading Overlay */
@@ -165,7 +174,6 @@ video {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
-/* CSS Spinner */
 .spinner {
   width: 48px;
   height: 48px;
@@ -179,7 +187,7 @@ video {
   to { transform: rotate(360deg); }
 }
 
-/* Bottom Control Bar Overlay */
+/* Bottom Bar */
 .bottom-bar {
   position: absolute;
   bottom: 4rem;
@@ -191,9 +199,9 @@ video {
   align-items: center;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.6), transparent);
   z-index: 10;
+  margin-bottom: 1.5rem;
 }
 
-/* Shutter Button */
 .shutter-btn {
   width: 76px;
   height: 76px;
@@ -221,11 +229,6 @@ video {
   transform: scale(0.92);
 }
 
-.shutter-btn:active .shutter-btn-inner {
-  background-color: #dddddd;
-}
-
-/* AR Scene canvas full width overlay */
 a-scene {
   position: absolute;
   top: 0;

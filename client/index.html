@@ -20,13 +20,26 @@
 
     <!-- Floating Top-Left Domain Controls -->
     <div class="domain-controls" id="domain-controls">
-      <div class="domain-input-chip">
-        <label for="x-min">Min X</label>
-        <input type="number" id="x-min" value="-10" step="any">
+      <!-- Min X Chip & Popup Slider -->
+      <div class="domain-chip-wrapper">
+        <div class="domain-input-chip" id="chip-min">
+          <label>Min X</label>
+          <span class="chip-val" id="val-min">-10</span>
+        </div>
+        <div class="slider-popup hidden" id="popup-min">
+          <input type="range" id="slider-min" min="-50" max="0" value="-10" step="1">
+        </div>
       </div>
-      <div class="domain-input-chip">
-        <label for="x-max">Max X</label>
-        <input type="number" id="x-max" value="10" step="any">
+
+      <!-- Max X Chip & Popup Slider -->
+      <div class="domain-chip-wrapper">
+        <div class="domain-input-chip" id="chip-max">
+          <label>Max X</label>
+          <span class="chip-val" id="val-max">10</span>
+        </div>
+        <div class="slider-popup hidden" id="popup-max">
+          <input type="range" id="slider-max" min="1" max="50" value="10" step="1">
+        </div>
       </div>
     </div>
 
@@ -44,7 +57,6 @@
     </div>
   </div>
 
-  <!-- Container where AR Scene will be mounted dynamically -->
   <div id="ar-viewport" class="hidden"></div>
 
   <script src="app.js"></script>
