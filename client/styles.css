@@ -162,3 +162,18 @@ video {
 .shutter-btn:active .shutter-btn-inner {
   background-color: #dddddd;
 }
+
+/* AR Scene canvas full width overlay */
+a-scene {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 1;
+}
+
+/* Ensure video and AR canvases layer cleanly under UI controls */
+.top-bar, .bottom-bar, .loading-overlay {
+  z-index: 10;
+}

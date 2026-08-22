@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <!-- Include AR.js for the camera background feed -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <style>
+        #change-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999;
+            background-color: #FF5733;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        #change-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+    </style>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <button id="change-btn" onclick="goToIndex()">Change Function</button>
+    
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+        
+        <a-camera position="0 1.6 0"></a-camera>
+
+        <!-- CONTAINER WRAPPER: This anchors items in world space so they stay sticky -->
+        <a-entity id="graph-container" position="0 -1.2 -5" rotation="-75 0 0">
+            <!-- Matplotlib Graph Plane nested securely inside the sticky container -->
+            <a-plane 
+                id="matplotlib-graph" 
+                width="3" 
+                height="3" 
+                material="transparent: true; alphaTest: 0.5;">
+            </a-plane>
+        </a-entity>
+        
+    </a-scene>
+
+    <script>
+        // Your active ngrok URL
+        const BACKEND_URL = "https://your-ngrok-subdomain.ngrok-free.app";
+
+        // Explicit HTTP Fetch Request on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // 1. Make the HTTP GET request to your FastAPI backend
+                const response = await fetch(`${BACKEND_URL}/get-graph?t=${Date.now()}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // 2. Turn the incoming PNG binary stream into a local object URL
+                const imageBlob = await response.blob();
+                const imageObjectURL = URL.createObjectURL(imageBlob);
+
+                // 3. Apply the blob URL to your A-Frame plane
+                const graphPlane = document.querySelector('#matplotlib-graph');
+                graphPlane.setAttribute('material', `src: url(${imageObjectURL}); transparent: true; alphaTest: 0.5;`);
+
+                console.log("Graph loaded successfully via HTTP fetch!");
+            } catch (error) {
+                console.error("Failed to fetch graph from backend:", error);
+            }
+        });
+        
+        function goToIndex() {
+            window.location.href = 'client/index.html';
+        }
+    </script>
+</body>
+</html>

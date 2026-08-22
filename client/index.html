@@ -8,23 +8,20 @@
 </head>
 <body>
 
-  <div class="camera-container">
+  <div class="camera-container" id="camera-container">
     <!-- Camera Video Feed -->
     <video id="webcam" autoplay playsinline muted></video>
 
     <!-- Header Overlay -->
     <header class="top-bar">
-      <!-- Close / Reset Button (Hidden by default) -->
-      <button class="close-btn hidden" id="close-btn" aria-label="Cancel and retake">
-        &#10005;
-      </button>
+      <button class="close-btn hidden" id="close-btn" aria-label="Cancel and retake">&#10005;</button>
       <h1>AR Graphs</h1>
     </header>
 
-    <!-- Loading Screen Overlay (Hidden by default) -->
+    <!-- Loading Screen Overlay -->
     <div class="loading-overlay hidden" id="loading-overlay">
       <div class="spinner"></div>
-      <p>Extracting equation...</p>
+      <p>Extracting equation & generating 3D plot...</p>
     </div>
 
     <!-- Shutter Button Overlay -->
@@ -34,6 +31,9 @@
       </button>
     </div>
   </div>
+
+  <!-- Container where AR Scene will be mounted dynamically -->
+  <div id="ar-viewport" class="hidden"></div>
 
   <script src="app.js"></script>
 </body>
