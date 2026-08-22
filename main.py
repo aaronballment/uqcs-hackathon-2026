@@ -57,17 +57,14 @@ async def extract_math(payload: ImagePayload):
         if response.error.message:
             raise Exception(f"Google Vision API Error: {response.error.message}")
 
-        # Extract text annotations
+        # Extract text
         extracted_text = response.full_text_annotation.text if response.full_text_annotation else ""
 
-        # Clean up whitespace/newlines
         extracted_text = extracted_text.strip()
 
         print("\n" + "="*40)
         print(" [Google Vision Result]:", extracted_text)
         print("="*40 + "\n")
-
-        # Return key matching your front-end expectation
 
         FILENAME = "current_graph.png"
 
