@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from google.cloud import vision  # Import Google Cloud Vision SDK
 import graphing
+import re
 
 app = FastAPI()
 
@@ -69,7 +70,14 @@ async def extract_math(payload: ImagePayload):
         except Exception as e:
             print(f"[Graphing Error]: {e}")
 
-        return {"latex": extracted_text, "filename": filename}
+        safe_filename = re.sub(r'[/\\:*?"<>|]', '_', extracted_text).strip()
+        if not safe_filename:
+            safe_filename = "output_plot"
+        filename = f"{safe_filename}.png"
+        file_path = os.path.join(PLOTS_DIR, filename)
+        clean_filename = os.path.basename(filename)
+
+        return {"latex": extracted_text, "filename": clean_filename}
 
     except Exception as e:
         print(f"[OCR Error]: {e}")

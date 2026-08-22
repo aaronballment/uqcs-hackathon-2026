@@ -68,7 +68,7 @@ captureBtn.addEventListener('click', async () => {
 
     // 4. Redirect to AR.html with the target image filename in query params
     window.location.href = `/AR.html?filename=${encodeURIComponent(data.filename)}`;
-
+    
   } catch (err) {
     if (err.name === 'AbortError') {
       console.log('API request aborted.');

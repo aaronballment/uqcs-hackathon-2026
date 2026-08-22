@@ -48,35 +48,27 @@
     </a-scene>
 
     <script>
-        // Your active ngrok URL
-        const BACKEND_URL = "https://your-ngrok-subdomain.ngrok-free.app";
+                // Extract 'filename' from the URL query parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const filename = urlParams.get('filename');
 
-        // Explicit HTTP Fetch Request on page load
-        window.addEventListener('DOMContentLoaded', async () => {
-            try {
-                // 1. Make the HTTP GET request to your FastAPI backend
-                const response = await fetch(`${BACKEND_URL}/get-graph?t=${Date.now()}`);
+        window.addEventListener('DOMContentLoaded', () => {
+            const graphPlane = document.querySelector('#matplotlib-graph');
+
+            if (filename) {
+                // Construct the relative URL pointing to FastAPI's mounted /plots directory
+                const imageUrl = `/plots/${filename}`;
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                // 2. Turn the incoming PNG binary stream into a local object URL
-                const imageBlob = await response.blob();
-                const imageObjectURL = URL.createObjectURL(imageBlob);
-
-                // 3. Apply the blob URL to your A-Frame plane
-                const graphPlane = document.querySelector('#matplotlib-graph');
-                graphPlane.setAttribute('material', `src: url(${imageObjectURL}); transparent: true; alphaTest: 0.5;`);
-
-                console.log("Graph loaded successfully via HTTP fetch!");
-            } catch (error) {
-                console.error("Failed to fetch graph from backend:", error);
+                // Update the A-Frame plane material with the image URL
+                graphPlane.setAttribute('material', `src: url(${imageUrl}); transparent: true; alphaTest: 0.5;`);
+                console.log(`Loading image from: ${imageUrl}`);
+            } else {
+                console.error("No filename parameter provided in the URL.");
             }
         });
-        
+
         function goToIndex() {
-            window.location.href = 'client/index.html';
+            window.location.href = '/';
         }
     </script>
 </body>
