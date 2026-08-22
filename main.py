@@ -5,24 +5,21 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from PIL import Image
-from pix2tex.cli import LatexOCR
+from google.cloud import vision  # Import Google Cloud Vision SDK
 
 app = FastAPI()
 
-# 1. Load the model ONCE globally at startup
-print("Loading Pix2Tex LaTeX-OCR model into memory...")
-ocr_model = LatexOCR()
-print("Model loaded successfully!")
+# 1. Initialize Google Cloud Vision Client globally
+# It automatically picks up credentials from GOOGLE_APPLICATION_CREDENTIALS env var
+print("Initializing Google Cloud Vision Client...")
+vision_client = vision.ImageAnnotatorClient()
+print("Vision Client ready!")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CLIENT_DIR = os.path.join(BASE_DIR, "client")
 
-# Define Data Model
 class ImagePayload(BaseModel):
-    image: str  # Base64 image from app.js
-
-# 2. Define API Endpoints FIRST
+    image: str  # Base64 image string from front-end
 
 @app.get("/")
 async def read_index():
@@ -37,27 +34,39 @@ async def extract_math(payload: ImagePayload):
         else:
             base64_data = payload.image
 
-        # Convert Base64 bytes to PIL Image
+        # Decode Base64 string directly to raw bytes
         image_bytes = base64.b64decode(base64_data)
-        img = Image.open(io.BytesIO(image_bytes))
 
-        # Predict LaTeX string using pre-loaded model
-        latex_string = ocr_model(img)
-        
+        # Build Vision API Image object from bytes
+        vision_image = vision.Image(content=image_bytes)
+
+        # Call Document Text Detection (optimized for dense text & equations)
+        response = vision_client.document_text_detection(image=vision_image)
+
+        # Handle API Errors
+        if response.error.message:
+            raise Exception(f"Google Vision API Error: {response.error.message}")
+
+        # Extract text annotations
+        extracted_text = response.full_text_annotation.text if response.full_text_annotation else ""
+
+        # Clean up whitespace/newlines
+        extracted_text = extracted_text.strip()
+
         print("\n" + "="*40)
-        print(" [Pix2Tex Result]:", latex_string)
+        print(" [Google Vision Result]:", extracted_text)
         print("="*40 + "\n")
 
-        return {"latex": latex_string}
+        # Return key matching your front-end expectation
+        return {"latex": extracted_text}
 
     except Exception as e:
         print(f"[OCR Error]: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# 3. Mount static files AFTER API endpoints
+# Mount static files
 app.mount("", StaticFiles(directory=CLIENT_DIR, html=True), name="client")
 
-# 4. Server Execution block LAST
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
