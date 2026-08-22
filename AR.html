@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <!-- Include AR.js for the camera background feed -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+    
+    <!-- Camera that floats in the world -->
+    <a-camera position="0 1.6 0"></a-camera>
+
+    <!-- Updated container: Positioned lower and tilted flat (-75deg) to look like it's on a desk -->
+    <a-entity id="graph-container" position="0 -0.8 -2.8" rotation="-75 0 0" scale="0.7 0.7 0.7">
+        <!-- Your math loop injects here -->
+    </a-entity>
+</a-scene>
+
+    <script>
+        const container = document.querySelector('#graph-container');
+
+        // 1. ADD THE FUNCTION TITLE / EQUATION TEXT
+        let eqText = document.createElement('a-text');
+        eqText.setAttribute('value', 'f(x) = x');
+        eqText.setAttribute('position', '-0.2 1.1 0'); // Positioned above the graph
+        eqText.setAttribute('scale', '0.8 0.8 0.8');
+        eqText.setAttribute('color', '#ffffff');
+        container.appendChild(eqText);
+
+        // 2. DRAW THE X AND Y AXES WITH TICKS
+        // Y-Axis
+        let yAxis = document.createElement('a-cylinder');
+        yAxis.setAttribute('radius', '0.003');
+        yAxis.setAttribute('height', '2');
+        yAxis.setAttribute('position', '0 0 0');
+        yAxis.setAttribute('color', '#aaaaaa');
+        container.appendChild(yAxis);
+
+        // X-Axis
+        let xAxis = document.createElement('a-cylinder');
+        xAxis.setAttribute('radius', '0.003');
+        xAxis.setAttribute('height', '2');
+        xAxis.setAttribute('rotation', '0 0 90');
+        xAxis.setAttribute('position', '0 0 0');
+        xAxis.setAttribute('color', '#aaaaaa');
+        container.appendChild(xAxis);
+
+        // Add Axis Ticks (Hash marks for scale)
+        for (let i = -0.8; i <= 0.8; i += 0.2) {
+            if (i === 0) continue; // Skip origin
+            
+            // Y-axis ticks
+            let yTick = document.createElement('a-box');
+            yTick.setAttribute('width', '0.04');
+            yTick.setAttribute('height', '0.005');
+            yTick.setAttribute('depth', '0.005');
+            yTick.setAttribute('position', `0 ${i} 0`);
+            yTick.setAttribute('color', '#ffffff');
+            container.appendChild(yTick);
+
+            // X-axis ticks
+            let xTick = document.createElement('a-box');
+            xTick.setAttribute('width', '0.005');
+            xTick.setAttribute('height', '0.04');
+            xTick.setAttribute('depth', '0.005');
+            xTick.setAttribute('position', `${i} 0 0`);
+            xTick.setAttribute('color', '#ffffff');
+            container.appendChild(xTick);
+        }
+
+        // 3. DRAW THE SOLID CONTINUOUS LINE FOR f(x) = x
+        let prevX = -1;
+        let prevY = prevX;
+
+        for (let x = -1; x <= 1; x += 0.02) { // Smaller step size for a buttery-smooth line
+            let currentY = x;
+
+            let lineSegment = document.createElement('a-entity');
+            let midX = (prevX + x) / 2;
+            let midY = (prevY + currentY) / 2;
+            let length = Math.sqrt(Math.pow(x - prevX, 2) + Math.pow(currentY - prevY, 2));
+
+            // Slightly thicker radius (0.01) so it forms a solid stroke
+            lineSegment.setAttribute('geometry', `primitive: cylinder; radius: 0.01; height: ${length}`);
+            lineSegment.setAttribute('material', 'color: #FF5733; shader: flat;');
+            
+            let angle = Math.atan2(currentY - prevY, x - prevX) * (180 / Math.PI);
+            lineSegment.setAttribute('position', `${midX} ${midY} 0`);
+            lineSegment.setAttribute('rotation', `0 0 ${angle}`);
+
+            container.appendChild(lineSegment);
+
+            prevX = x;
+            prevY = currentY;
+        }
+    </script>
+</body>
+</html>
