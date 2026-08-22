@@ -1,54 +1,77 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
+    <style>
+        #change-btn {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background-color: #FF5733;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+        }
+    </style>
 </head>
-<body style="margin: 0; overflow: hidden;">
+<body>
+    <button id="change-btn" onclick="goToIndex()">Change Function</button>
 
-    <a-scene embedded 
-             arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;" 
-             renderer="logarithmicDepthBuffer: true;"
-             vr-mode-ui="enabled: false">
-        
-        <!-- The Hiro marker acts as the physical anchor -->
-        <a-marker preset="hiro">
-            
-            <!-- The graph is now pinned to the marker, not the camera -->
-            <!-- We rotate it -90 on X so it sits flat like a sheet of paper on the marker -->
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" vr-mode-ui="enabled: false">
+        <a-camera position="0 1.6 0"></a-camera>
+
+        <a-entity id="graph-container" position="0 -1.2 -5.0" rotation="-75 0 0">
             <a-plane 
                 id="matplotlib-graph" 
-                position="0 0.1 0" 
-                rotation="-90 0 0" 
                 width="2" 
                 height="2" 
                 material="transparent: true; alphaTest: 0.5;">
             </a-plane>
-
-        </a-marker>
-        
-        <!-- Camera is just a passive observer now -->
-        <a-entity camera></a-entity>
+        </a-entity>
     </a-scene>
 
     <script>
         const BACKEND_URL = "https://your-ngrok-subdomain.ngrok-free.app";
 
         window.addEventListener('DOMContentLoaded', async () => {
+            const graphPlane = document.querySelector('#matplotlib-graph');
+            const marker = document.querySelector('#hiro-marker');
+
+            // 1. Fetch the graph texture
             try {
                 const response = await fetch(`${BACKEND_URL}/get-graph?t=${Date.now()}`);
-                if (!response.ok) throw new Error("Failed to fetch");
+                if (!response.ok) throw new Error("Failed to fetch graph");
 
                 const imageBlob = await response.blob();
                 const imageObjectURL = URL.createObjectURL(imageBlob);
 
-                const graphPlane = document.querySelector('#matplotlib-graph');
                 graphPlane.setAttribute('material', `src: url(${imageObjectURL}); transparent: true; alphaTest: 0.5;`);
             } catch (error) {
                 console.error("Error loading graph:", error);
             }
+
+            // 2. Toggle visibility strictly when the Hiro marker is tracked
+            marker.addEventListener('markerFound', () => {
+                graphPlane.setAttribute('visible', 'true');
+            });
+
+            marker.addEventListener('markerLost', () => {
+                graphPlane.setAttribute('visible', 'false');
+            });
         });
+
+        function goToIndex() {
+            window.location.href = 'client/index.html';
+        }
     </script>
 </body>
 </html>
