@@ -4,11 +4,20 @@ import base64
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from google.cloud import vision  # Import Google Cloud Vision SDK
-import graphing
+from graphing import latex_conversion
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = ["*"],
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
 
 # 1. Initialize Google Cloud Vision Client globally
 # It automatically picks up credentials from GOOGLE_APPLICATION_CREDENTIALS env var
@@ -60,7 +69,7 @@ async def extract_math(payload: ImagePayload):
 
         # Return key matching your front-end expectation
         try: 
-            graphing.latex_conversion(extracted_text,extracted_text)
+            latex_conversion(extracted_text,extracted_text)
         except Exception as e:
             print(e)
 
