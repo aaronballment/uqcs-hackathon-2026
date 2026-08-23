@@ -78,45 +78,49 @@ def process_latex_input(latex: str, base_filename: str, x_min=-10.0, x_max=10.0,
         return out_filename, True
 
     else:
-        # 2D Plot Output (.png)
         out_filename = f"{base_filename}.png"
-        filepath = os.path.join(output_dir, out_filename)
+    filepath = os.path.join(output_dir, out_filename)
 
-        func = sp.lambdify(x, expr, modules=['numpy', 'math'])
-        x_values = np.linspace(x_min, x_max, 400)
-        
-        try:
-            y_values = func(x_values)
-            if not isinstance(y_values, np.ndarray):
-                y_values = np.full_like(x_values, float(y_values))
-        except Exception:
-            y_list = []
-            for val in x_values:
-                try:
-                    res = expr.subs(x, val).evalf()
-                    y_list.append(float(res) if res.is_real else np.nan)
-                except Exception:
-                    y_list.append(np.nan)
-            y_values = np.array(y_list, dtype=float)
+    func = sp.lambdify(x, expr, modules=['numpy', 'math'])
+    x_values = np.linspace(x_min, x_max, 400)
+    
+    try:
+        y_values = func(x_values)
+        if not isinstance(y_values, np.ndarray):
+            y_values = np.full_like(x_values, float(y_values))
+    except Exception:
+        y_list = []
+        for val in x_values:
+            try:
+                res = expr.subs(x, val).evalf()
+                y_list.append(float(res) if res.is_real else np.nan)
+            except Exception:
+                y_list.append(np.nan)
+        y_values = np.array(y_list, dtype=float)
 
-        fig, ax = plt.subplots(figsize=(6, 6))
-        ax.plot(x_values, y_values, color="#1051AB", linewidth=4)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    if max(y_values) >= 20:
+        ax.set_ylim(-20, 20)
+    ax.plot(x_values, y_values, color="#1051AB", linewidth=4)
 
-        for spine in ['top', 'right']:
-            ax.spines[spine].set_visible(False)
+    for spine in ['top', 'right']:
+        ax.spines[spine].set_visible(False)
 
-        ax.spines['bottom'].set_linewidth(4.5)
-        ax.spines['bottom'].set_color("#D51E1E")
-        ax.spines['left'].set_linewidth(4.5)
-        ax.spines['left'].set_color("#D51E1E")
+    ax.spines['bottom'].set_linewidth(4.5)
+    ax.spines['bottom'].set_color("#D51E1E")
+    ax.spines['bottom'].set_position('zero')
+    ax.spines['left'].set_linewidth(4.5)
+    ax.spines['left'].set_color("#D51E1E")
+    ax.spines['left'].set_position('zero')
 
-        ax.grid(axis='y', linestyle='-', linewidth=1.5, color='#E2E8F0', zorder=0)
-        ax.grid(axis='x', linestyle='-', linewidth=1.5, color='#E2E8F0', zorder=0)
-        ax.set_axisbelow(True)
 
-        plt.tick_params('both', labelcolor="#D51E1E", labelsize=14)
+    ax.grid(axis='y', linestyle='-', linewidth=1.5, color='#E2E8F0', zorder=0)
+    ax.grid(axis='x', linestyle='-', linewidth=1.5, color='#E2E8F0', zorder=0)
+    ax.set_axisbelow(True)
 
-        plt.savefig(filepath, transparent=True)
-        plt.close(fig)
+    plt.tick_params('both', labelcolor="#D51E1E", labelsize=24)
 
-        return out_filename, False
+    plt.savefig(filepath, transparent=True)
+    plt.close(fig)
+
+    return out_filename, False
