@@ -99,8 +99,8 @@ def process_latex_input(latex: str, base_filename: str, x_min=-10.0, x_max=10.0,
         y_values = np.array(y_list, dtype=float)
 
     fig, ax = plt.subplots(figsize=(10, 10))
-    if max(y_values) >= 20:
-        ax.set_ylim(-20, 20)
+    if max(y_values) >= 50:
+        ax.set_ylim(-50, 50)
     ax.plot(x_values, y_values, color="#1051AB", linewidth=4)
 
     for spine in ['top', 'right']:
