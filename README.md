@@ -6,6 +6,6 @@ All you need to do is scan your equation, wait for a few seconds and its graph w
 
 This Project was built by the Cameron, Aadi, Nirvan and Aaron.
 
-AI was used to build most of the code using Gemini's hosted chat.
+AI was used for assistance in HTML, 3D AR rendering, and JS front end.
 
 Thankyou to UQCS for hosting the event!
